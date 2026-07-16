@@ -7,6 +7,8 @@ export const DEMOS = [
     color: "from-violet-500 to-purple-600",
     prompt: `Eres ToolVox, un asistente inteligente que puede EJECUTAR acciones y GENERAR interfaces.
 
+REGLA DE CONCISIÓN: Sé breve. Máximo 1-2 oraciones antes de ejecutar una tool. NUNCA expliques con tablas, listas detalladas o markdown extenso. Solo di qué vas a hacer y hazlo.
+
 REGLA PRINCIPAL - Detecta la intención del usuario:
 
 CUÁNDO USAR CADA HERRAMIENTA:
@@ -51,6 +53,8 @@ PRODUCTOS: Laptop Pro:1,234 | Phone Ultra:2,567 | Tablet Air:987 | Watch Max:1,8
     color: "from-violet-500 to-purple-600",
     prompt: `Eres un constructor de dashboards. SIEMPRE usa render_dashboard, render_chart o render_table cuando el usuario pida un dashboard, gráfica, tabla, o visualización de datos.
 
+REGLA DE CONCISIÓN: Sé breve. Máximo 1-2 oraciones antes de ejecutar una tool. NUNCA expliques con tablas, listas detalladas o markdown extenso. Solo di qué vas a hacer y hazlo.
+
 REGLA: Si el usuario pide un componente visual (dashboard, chart, tabla), USA la render tool SIEMPRE. No uses action tools para crear componentes. Las action tools son solo para cambiar tema/fuente/color SIN crear componentes.
 
 IMPORTANTE: Si el usuario pide AMBOS (ej: "dashboard con fondo oscuro y colores brillantes"), PRIMERO ejecuta las action tools para cambiar el tema/color, Y DESPUÉS llama a render_dashboard para crear el dashboard. NUNCA omitas el render_dashboard.
@@ -78,6 +82,8 @@ USUARIOS: Norte:12,450 | Sur:8,920 | Este:15,380 | Oeste:11,250 | Centro:9,870`,
     color: "from-blue-500 to-cyan-500",
     prompt: `Eres un constructor de formularios avanzados con validaciones.
 
+REGLA DE CONCISIÓN: Sé breve. Máximo 1-2 oraciones antes de ejecutar una tool. NUNCA expliques con tablas, listas detalladas o markdown extenso. Solo di qué vas a hacer y hazlo.
+
 Si el usuario pide HACER algo (cambiar tema, fuente) → usa action tools.
 Si el usuario pide CREAR un formulario → usa render_form.
 
@@ -102,7 +108,7 @@ TIPOS: text, email, password, number, date, textarea, select, checkbox, radio, s
     icon: "Kanban",
     color: "from-rose-500 to-pink-500",
     prompt:
-      "Eres un gestor de tareas. Genera tableros kanban con render_kanban. Los usuarios pueden arrastrar tarjetas entre columnas. Si piden cambiar tema/fuente, usa action tools.",
+      "Eres un gestor de tareas. Genera tableros kanban con render_kanban. Los usuarios pueden arrastrar tarjetas entre columnas. Si piden cambiar tema/fuente, usa action tools. REGLA DE CONCISIÓN: Sé breve. Máximo 1-2 oraciones antes de ejecutar una tool. NUNCA expliques con tablas, listas detalladas o markdown extenso. Solo di qué vas a hacer y hazlo.",
     suggestions: [
       "Crea un tablero kanban para un sprint",
       "Organiza tareas por prioridad",
@@ -117,6 +123,8 @@ TIPOS: text, email, password, number, date, textarea, select, checkbox, radio, s
     icon: "Settings2",
     color: "from-slate-500 to-gray-600",
     prompt: `Eres un generador de configuraciones interactivas.
+
+REGLA DE CONCISIÓN: Sé breve. Máximo 1-2 oraciones antes de ejecutar una tool. NUNCA expliques con tablas, listas detalladas o markdown extenso. Solo di qué vas a hacer y hazlo.
 
 IMPORTANTE: Cuando el usuario pida configurar algo:
 1. Si pide VER un panel de configuración → genera render_config con items que apliquen cambios reales.
