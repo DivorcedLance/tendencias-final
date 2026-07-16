@@ -5,11 +5,24 @@ import { tools } from "@/lib/ai/tools";
 function normalizeMessages(msgs: any[]) {
   return msgs.map((m) => {
     if (m.parts && Array.isArray(m.parts)) {
-      const text = m.parts
+      const textParts = m.parts
         .filter((p: any) => p.type === "text")
         .map((p: any) => p.text)
         .join("");
-      return { role: m.role, content: text };
+
+      const toolParts = m.parts
+        .filter((p: any) => p.type?.startsWith("tool-") && p.type !== "text")
+        .map((p: any) => {
+          const toolName = p.toolName || p.type?.replace("tool-", "") || "";
+          if (p.state === "result" || p.state === "output-available") {
+            return `[Herramienta ${toolName} ejecutada]`;
+          }
+          return `[Herramienta ${toolName} llamada]`;
+        })
+        .join(" ");
+
+      const content = [textParts, toolParts].filter(Boolean).join(" ");
+      return { role: m.role, content: content || "" };
     }
     return { role: m.role, content: m.content ?? "" };
   });

@@ -52,6 +52,11 @@ function sanitizeParts(parts: any[] | undefined): any[] | undefined {
   return sanitizeValue(parts);
 }
 
+function filterToTextParts(parts: any[] | undefined): any[] | undefined {
+  if (!parts || !Array.isArray(parts)) return undefined;
+  return parts.filter((p: any) => p && p.type === "text" && typeof p.text === "string");
+}
+
 export interface StoredChat {
   id: string;
   demoId: string;
@@ -149,7 +154,7 @@ export async function getMessagesByChat(chatId: string): Promise<StoredMessage[]
     request.onsuccess = () => {
       const messages = request.result
         .sort((a, b) => a.createdAt - b.createdAt)
-        .map((m) => ({ ...m, parts: sanitizeParts(m.parts) }));
+        .map((m) => ({ ...m, parts: filterToTextParts(m.parts) }));
       resolve(messages);
     };
     request.onerror = () => reject(request.error);
