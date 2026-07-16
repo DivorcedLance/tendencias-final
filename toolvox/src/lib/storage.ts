@@ -22,6 +22,36 @@ function openDB(): Promise<IDBDatabase> {
   });
 }
 
+function sanitizeValue(val: any, seen?: Set<any>): any {
+  if (val === null || val === undefined) return val;
+  if (typeof val !== "object") return val;
+  if (val instanceof Date || val instanceof RegExp) return val;
+  if (typeof val === "function") return undefined;
+  if (typeof val === "symbol") return undefined;
+
+  seen = seen || new Set();
+  if (seen.has(val)) return undefined;
+  seen.add(val);
+
+  if (Array.isArray(val)) {
+    return val.map((item) => sanitizeValue(item, seen));
+  }
+
+  const clean: Record<string, any> = {};
+  for (const key of Object.keys(val)) {
+    const v = sanitizeValue(val[key], seen);
+    if (v !== undefined) {
+      clean[key] = v;
+    }
+  }
+  return clean;
+}
+
+function sanitizeParts(parts: any[] | undefined): any[] | undefined {
+  if (!parts || !Array.isArray(parts)) return undefined;
+  return sanitizeValue(parts);
+}
+
 export interface StoredChat {
   id: string;
   demoId: string;
@@ -102,7 +132,8 @@ export async function deleteChat(id: string): Promise<void> {
 export async function saveMessage(message: StoredMessage): Promise<void> {
   const db = await openDB();
   const tx = db.transaction(STORE_MESSAGES, "readwrite");
-  tx.objectStore(STORE_MESSAGES).put(message);
+  const sanitized = { ...message, parts: sanitizeParts(message.parts) };
+  tx.objectStore(STORE_MESSAGES).put(sanitized);
   return new Promise((resolve, reject) => {
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
@@ -116,7 +147,9 @@ export async function getMessagesByChat(chatId: string): Promise<StoredMessage[]
   const request = index.getAll(chatId);
   return new Promise((resolve, reject) => {
     request.onsuccess = () => {
-      const messages = request.result.sort((a, b) => a.createdAt - b.createdAt);
+      const messages = request.result
+        .sort((a, b) => a.createdAt - b.createdAt)
+        .map((m) => ({ ...m, parts: sanitizeParts(m.parts) }));
       resolve(messages);
     };
     request.onerror = () => reject(request.error);

@@ -4,7 +4,6 @@ import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartBlock } from "./chart-block";
 import { TableBlock } from "./table-block";
-import { useTheme } from "@/components/theme-provider";
 
 interface KPI {
   label: string;
@@ -35,7 +34,6 @@ interface DashboardBlockProps {
 }
 
 export function DashboardBlock({ title, kpis, charts, tables }: DashboardBlockProps) {
-  const { dark } = useTheme();
 
   const trendColor = (trend?: string) => {
     switch (trend) {
@@ -85,12 +83,12 @@ export function DashboardBlock({ title, kpis, charts, tables }: DashboardBlockPr
       )}
 
       {charts && charts.map((chart, i) => (
-        <ChartBlock key={`chart-${i}-${dark ? "d" : "l"}`} type={chart.type} title={chart.title} data={chart.data} />
+        <ChartBlock key={`chart-${i}-${chart.title}`} type={chart.type} title={chart.title} data={chart.data} />
       ))}
 
       {tables && tables.map((table, i) => (
         <TableBlock
-          key={`table-${i}-${dark ? "d" : "l"}`}
+          key={`table-${i}-${table.title}`}
           title={table.title}
           columns={table.columns}
           rows={table.rows}

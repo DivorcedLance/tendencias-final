@@ -53,7 +53,6 @@ interface ChartBlockProps {
 
 export function ChartBlock({ type, title, data }: ChartBlockProps) {
   const { dark } = useTheme();
-  const key = `${dark ? "d" : "l"}-${title}`;
 
   const tooltipStyle = getTooltipStyle(dark);
   const gridStroke = getGridStroke(dark);

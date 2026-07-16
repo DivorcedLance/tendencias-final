@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { Loader2, AlertCircle } from "lucide-react";
-import { useTheme } from "@/components/theme-provider";
+import { useThemeSafe } from "@/components/theme-provider";
 import { ChartBlock } from "./chart-block";
 import { TableBlock } from "./table-block";
 import { FormBlock } from "./form-block";
@@ -13,8 +13,9 @@ import { CodeBlock } from "./code-block";
 import { SelectorBlock } from "./selector-block";
 import { SliderBlock } from "./slider-block";
 
-function ActionApplier({ result, theme }: { result: Record<string, any>; theme: ReturnType<typeof useTheme> }) {
+function ActionApplier({ result, theme }: { result: Record<string, any>; theme: NonNullable<ReturnType<typeof useThemeSafe>> }) {
   const applied = useRef(false);
+  const { setDark, setFontSize, setFontFamily, setAccentColor } = theme;
 
   useEffect(() => {
     if (applied.current) return;
@@ -22,20 +23,20 @@ function ActionApplier({ result, theme }: { result: Record<string, any>; theme: 
     try {
       switch (result.action) {
         case "set_theme":
-          theme.setDark(result.mode === "dark");
+          setDark(result.mode === "dark");
           break;
         case "set_font_size":
-          theme.setFontSize(result.size);
+          setFontSize(result.size);
           break;
         case "set_font":
-          theme.setFontFamily(result.family);
+          setFontFamily(result.family);
           break;
         case "set_accent_color":
-          theme.setAccentColor(result.color);
+          setAccentColor(result.color);
           break;
       }
     } catch {}
-  }, [result, theme]);
+  }, [result, setDark, setFontSize, setFontFamily, setAccentColor]);
 
   const labels: Record<string, string> = {
     set_theme: result.mode === "dark" ? "Modo oscuro activado" : "Modo claro activado",
@@ -97,7 +98,7 @@ interface ToolRendererProps {
 
 export function ToolRenderer({ toolInvocation }: ToolRendererProps) {
   const { toolName, args, state, result } = toolInvocation;
-  const theme = useTheme();
+  const theme = useThemeSafe();
 
   if (state === "call") {
     return <LoadingIndicator toolName={toolName} />;
@@ -114,6 +115,7 @@ export function ToolRenderer({ toolInvocation }: ToolRendererProps) {
 
   // Handle action tools - apply via useEffect, not during render
   if (state === "result" && result?.action) {
+    if (!theme) return null;
     return <ActionApplier result={result} theme={theme} />;
   }
 
