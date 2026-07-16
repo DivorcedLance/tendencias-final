@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Loader2, AlertCircle } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 import { ChartBlock } from "./chart-block";
@@ -14,7 +14,11 @@ import { SelectorBlock } from "./selector-block";
 import { SliderBlock } from "./slider-block";
 
 function ActionApplier({ result, theme }: { result: Record<string, any>; theme: ReturnType<typeof useTheme> }) {
+  const applied = useRef(false);
+
   useEffect(() => {
+    if (applied.current) return;
+    applied.current = true;
     try {
       switch (result.action) {
         case "set_theme":

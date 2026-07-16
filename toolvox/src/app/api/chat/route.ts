@@ -1,4 +1,4 @@
-import { streamText } from "ai";
+import { streamText, isStepCount } from "ai";
 import { DEFAULT_MODEL } from "@/lib/ai/models";
 import { tools } from "@/lib/ai/tools";
 
@@ -27,6 +27,7 @@ export async function POST(req: Request) {
       "Eres un asistente inteligente que genera interfaces interactivas. Cuando el usuario pida algo que pueda representarse visualmente, usa las tools disponibles para renderizar componentes interactivos como charts, tablas, formularios, dashboards, kanban boards, configuraciones, o código. Responde siempre en español.",
     messages,
     tools,
+    stopWhen: isStepCount(10),
   });
 
   return result.toUIMessageStreamResponse();
