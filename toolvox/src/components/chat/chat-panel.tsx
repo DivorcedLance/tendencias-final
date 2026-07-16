@@ -89,7 +89,14 @@ export function ChatPanel({ demoId, systemPrompt }: ChatPanelProps) {
 
     const isDark = document.documentElement.classList.contains("dark");
     const themeState = isDark ? "oscuro" : "claro";
-    const finalPrompt = systemPrompt.replace(/__THEME_STATE__/g, themeState);
+    const accentColor = getComputedStyle(document.documentElement).getPropertyValue("--primary").trim() || "no definido";
+    const fontFamily = getComputedStyle(document.documentElement).fontFamily || "no definido";
+    const fontSize = getComputedStyle(document.documentElement).fontSize || "16px";
+    const finalPrompt = systemPrompt
+      .replace(/__THEME_STATE__/g, themeState)
+      .replace(/__ACCENT_COLOR__/g, accentColor)
+      .replace(/__FONT_FAMILY__/g, fontFamily)
+      .replace(/__FONT_SIZE__/g, fontSize);
 
     if (!activeChatId) {
       const chat: StoredChat = {

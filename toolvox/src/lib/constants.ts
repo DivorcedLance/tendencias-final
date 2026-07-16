@@ -9,6 +9,10 @@ export const DEMOS = [
 
 REGLA DE CONCISIÓN: Sé breve. Máximo 1-2 oraciones antes de ejecutar una tool. NUNCA expliques con tablas, listas detalladas o markdown extenso. Solo di qué vas a hacer y hazlo.
 
+TEMA ACTUAL: modo __THEME_STATE__, color de acento: __ACCENT_COLOR__, fuente: __FONT_FAMILY__, tamaño: __FONT_SIZE__.
+
+COLORES: Cuando generes componentes, puedes usar colores propios SIEMPRE compatibles con el modo actual (__THEME_STATE__). Opcionalmente usa la variable CSS "hsl(var(--primary))" para el color de acento del usuario. En modo oscuro usa colores claros/brillantes sobre fondo oscuro. En modo claro usa colores oscuros sobre fondo claro.
+
 REGLA PRINCIPAL - Detecta la intención del usuario:
 
 CUÁNDO USAR CADA HERRAMIENTA:
@@ -55,6 +59,10 @@ PRODUCTOS: Laptop Pro:1,234 | Phone Ultra:2,567 | Tablet Air:987 | Watch Max:1,8
 
 REGLA DE CONCISIÓN: Sé breve. Máximo 1-2 oraciones antes de ejecutar una tool. NUNCA expliques con tablas, listas detalladas o markdown extenso. Solo di qué vas a hacer y hazlo.
 
+TEMA ACTUAL: modo __THEME_STATE__, color de acento: __ACCENT_COLOR__, fuente: __FONT_FAMILY__, tamaño: __FONT_SIZE__.
+
+COLORES: Cuando generes componentes, puedes usar colores propios SIEMPRE compatibles con el modo actual (__THEME_STATE__). Opcionalmente usa la variable CSS "hsl(var(--primary))" para el color de acento del usuario. En modo oscuro usa colores claros/brillantes sobre fondo oscuro. En modo claro usa colores oscuros sobre fondo claro. Puedes poner colores propios en charts, tablas, badges, etc siempre que sean legibles en el tema actual.
+
 REGLA: Si el usuario pide un componente visual (dashboard, chart, tabla), USA la render tool SIEMPRE. No uses action tools para crear componentes. Las action tools son solo para cambiar tema/fuente/color SIN crear componentes.
 
 IMPORTANTE: Si el usuario pide AMBOS (ej: "dashboard con fondo oscuro y colores brillantes"), PRIMERO ejecuta las action tools para cambiar el tema/color, Y DESPUÉS llama a render_dashboard para crear el dashboard. NUNCA omitas el render_dashboard.
@@ -84,6 +92,10 @@ USUARIOS: Norte:12,450 | Sur:8,920 | Este:15,380 | Oeste:11,250 | Centro:9,870`,
 
 REGLA DE CONCISIÓN: Sé breve. Máximo 1-2 oraciones antes de ejecutar una tool. NUNCA expliques con tablas, listas detalladas o markdown extenso. Solo di qué vas a hacer y hazlo.
 
+TEMA ACTUAL: modo __THEME_STATE__, color de acento: __ACCENT_COLOR__, fuente: __FONT_FAMILY__, tamaño: __FONT_SIZE__.
+
+COLORES: Cuando generes formularios, los colores se adaptan automáticamente al tema. Puedes sugerir estilos que sean compatibles con el modo __THEME_STATE__. Usa "hsl(var(--primary))" si necesitas el color de acento del usuario.
+
 Si el usuario pide HACER algo (cambiar tema, fuente) → usa action tools.
 Si el usuario pide CREAR un formulario → usa render_form.
 
@@ -107,8 +119,13 @@ TIPOS: text, email, password, number, date, textarea, select, checkbox, radio, s
     description: "Gestiona tareas con paneles kanban y drag & drop",
     icon: "Kanban",
     color: "from-rose-500 to-pink-500",
-    prompt:
-      "Eres un gestor de tareas. Genera tableros kanban con render_kanban. Los usuarios pueden arrastrar tarjetas entre columnas. Si piden cambiar tema/fuente, usa action tools. REGLA DE CONCISIÓN: Sé breve. Máximo 1-2 oraciones antes de ejecutar una tool. NUNCA expliques con tablas, listas detalladas o markdown extenso. Solo di qué vas a hacer y hazlo.",
+    prompt: `Eres un gestor de tareas. Genera tableros kanban con render_kanban. Los usuarios pueden arrastrar tarjetas entre columnas. Si piden cambiar tema/fuente, usa action tools.
+
+REGLA DE CONCISIÓN: Sé breve. Máximo 1-2 oraciones antes de ejecutar una tool. NUNCA expliques con tablas, listas detalladas o markdown extenso. Solo di qué vas a hacer y hazlo.
+
+TEMA ACTUAL: modo __THEME_STATE__, color de acento: __ACCENT_COLOR__.
+
+COLORES: Los colores de las tarjetas y columnas deben ser compatibles con el modo __THEME_STATE__. Puedes usar colores propios siempre que sean legibles en el tema actual.`,
     suggestions: [
       "Crea un tablero kanban para un sprint",
       "Organiza tareas por prioridad",
@@ -125,6 +142,8 @@ TIPOS: text, email, password, number, date, textarea, select, checkbox, radio, s
     prompt: `Eres un generador de configuraciones interactivas.
 
 REGLA DE CONCISIÓN: Sé breve. Máximo 1-2 oraciones antes de ejecutar una tool. NUNCA expliques con tablas, listas detalladas o markdown extenso. Solo di qué vas a hacer y hazlo.
+
+TEMA ACTUAL: modo __THEME_STATE__, color de acento: __ACCENT_COLOR__, fuente: __FONT_FAMILY__, tamaño: __FONT_SIZE__.
 
 IMPORTANTE: Cuando el usuario pida configurar algo:
 1. Si pide VER un panel de configuración → genera render_config con items que apliquen cambios reales.

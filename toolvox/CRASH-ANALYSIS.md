@@ -2,74 +2,81 @@
 
 ## Estado actual
 
-Se modificaron los prompts para agregar una "REGLA DE CONCISIÓN" que limita las respuestas de la IA a máximo 1-2 oraciones antes de ejecutar tools. Esto reduce la frecuencia de crashes porque hay menos tool invocations por mensaje, pero **los bugs de código no se arreglaron**.
-
-Archivos modificados:
-- `src/app/api/chat/route.ts` — prompt del sistema agregado con regla de concisión
-- `src/lib/constants.ts` — prompts de cada demo con regla de concisión
+Se corrigieron los 3 problemas de mayor severidad en el commit `a101500`. Los 3 restantes son de severidad media/baja y no causan crashes directos.
 
 ---
 
-## Problemas identificados (sin corregir)
+## Problemas corregidos
 
-### 1. `useTheme` llamado incondicionalmente en `ToolRenderer` (Crash directo)
+### 1. ✅ `useTheme` crash en ToolRenderer — CORREGIDO
 
-**Archivo:** `src/components/tools/tool-renderer.tsx:100`
+**Archivo:** `src/components/tools/tool-renderer.tsx`
 
-`useTheme()` se llama sin importar el `state` del tool:
+Se agregó `useThemeSafe()` en `theme-provider.tsx:146-148` que retorna `null` en vez de throw. ToolRenderer lo usa con null check:
 
 ```tsx
-export function ToolRenderer({ toolInvocation }: ToolRendererProps) {
-  const { toolName, args, state, result } = toolInvocation;
-  const theme = useTheme();  // <-- SIEMPRE se ejecuta
+const theme = useThemeSafe();
+// ...
+if (!theme) return null;  // línea 118
 ```
-
-Si el `ThemeContext` no está disponible (por ejemplo, si un componente se renderiza fuera del `<ThemeProvider>`), esto lanza `throw new Error("useTheme must be used within ThemeProvider")` en `theme-provider.tsx:142`. Cualquier tool invocation que se renderice antes de que el provider monte causará crash.
 
 ---
 
-### 2. `DashboardBlock` usa `dark` como key, causando remounts de Recharts (Performance freeze)
+### 2. ✅ Key con `dark` remonta Recharts — CORREGIDO
 
-**Archivo:** `src/components/tools/dashboard-block.tsx:88-93`
+**Archivo:** `src/components/tools/dashboard-block.tsx:86,91`
+
+Keys cambiadas de `dark ? "d" : "l"` a `chart.title` / `table.title`:
 
 ```tsx
-<ChartBlock key={`chart-${i}-${dark ? "d" : "l"}`} ... />
-<TableBlock key={`table-${i}-${dark ? "d" : "l"}`} ... />
+<ChartBlock key={`chart-${i}-${chart.title}`} ... />
+<TableBlock key={`table-${i}-${table.title}`} ... />
 ```
 
-Cuando cambia el tema, **cada Chart y Table se desmonta y remonta**. Recharts usa `ResizeObserver` internamente. Si hay varios charts/tablas y el usuario cambia el tema rápidamente, se acumulan observers y re-renders pesados, lo que puede colgar el navegador.
+---
+
+### 3. ✅ Race condition en ActionApplier — CORREGIDO
+
+**Archivo:** `src/components/tools/tool-renderer.tsx:16-39`
+
+Ahora usa `useRef` para prevenir doble ejecución y `useEffect` para ejecutar fuera del render:
+
+```tsx
+const applied = useRef(false);
+useEffect(() => {
+  if (applied.current) return;
+  applied.current = true;
+  // ... apply theme changes
+}, [result, setDark, setFontSize, setFontFamily, setAccentColor]);
+```
 
 ---
 
-### 3. Race condition en `ActionApplier` (Crash potencial)
+## Problemas pendientes (severidad media/baja)
 
-**Archivo:** `src/components/tools/tool-renderer.tsx:16-38`
+### 4. `persistMessages` guarda tool parts en IndexedDB (Severidad: Media)
 
-Cuando la IA ejecuta múltiples action tools simultáneamente (ej: `set_theme` + `set_accent_color`), el `ActionApplier` usa un `ref` para evitar doble ejecución, pero **no hay garantía de que `theme` (el objeto de contexto) sea estable**. Si el contexto se re-renderiza entre ejecuciones, `theme` puede apuntar a valores stale, causando comportamiento impredecible.
+**Archivo:** `src/components/chat/chat-panel.tsx:67-83` y `130-145`
 
----
-
-### 4. `persistMessages` guarda tool parts completas en IndexedDB (Crash al cargar chat antiguo)
-
-**Archivo:** `src/components/chat/chat-panel.tsx:67-83` y `123-138`
-
-Guarda `msg.parts` completas (que incluyen tool invocations con input/output). Al cargar un chat viejo en `loadChat`, se pasan estas partes a `setMessages`:
+Guarda `msg.parts` completas (tool invocations con input/output). Al cargar un chat viejo en `loadChat`, se pasan a `setMessages`:
 
 ```tsx
 const uiMessages = storedMessages.map((m) => ({
   id: m.id,
   role: m.role,
   content: m.content,
-  parts: m.parts,  // <-- tool parts con datos potencialmente corruptos o circulares
+  parts: m.parts,  // tool parts con datos potencialmente serializados incorrectamente
 }));
 setMessages(uiMessages as any);
 ```
 
-Si las tool parts contienen objetos con referencias circulares o datos que el AI SDK no puede deserializar correctamente, `setMessages` puede causar un crash silencioso o un loop de re-renders.
+Si las tool parts contienen datos que el AI SDK no puede deserializar, puede causar crash al reabrir un chat viejo.
+
+**Fix sugerido:** No guardar `parts` en IndexedDB, o filtrar solo las partes de texto al cargar.
 
 ---
 
-### 5. `normalizeMessages` descarta tool results, causando pérdida de contexto (Comportamiento errático)
+### 5. `normalizeMessages` descarta tool results (Severidad: Baja)
 
 **Archivo:** `src/app/api/chat/route.ts:5-16`
 
@@ -80,14 +87,15 @@ const text = m.parts
   .filter((p: any) => p.type === "text")
   .map((p: any) => p.text)
   .join("");
-return { role: m.role, content: text };
 ```
 
-Pero el AI SDK **envía todas las partes de los mensajes** al modelo (incluyendo tool invocations). Esto significa que en conversaciones largas, la IA puede perder contexto sobre qué tools ya ejecutó, intentar ejecutar la misma tool muchas veces, y crear un loop que sature el stream.
+En conversaciones largas, la IA puede perder contexto sobre qué tools ya ejecutó. No causa crash, pero afecta la calidad de la IA.
+
+**Fix sugerido:** Mantener un resumen de tool results en el message content.
 
 ---
 
-### 6. `useChat` con `id` dinámico + `setMessages` (Posible conflicto de estado)
+### 6. `useChat` con `id` dinámico (Severidad: Baja)
 
 **Archivo:** `src/components/chat/chat-panel.tsx:39-41`
 
@@ -97,17 +105,17 @@ const { messages, sendMessage, status, setMessages } = useChat({
 });
 ```
 
-Cuando se carga un chat viejo (`loadChat`), se cambia `activeChatId` y se llama `setMessages`. Pero `useChat` mantiene su propio estado interno. Si el hook recibe un nuevo `id` mientras procesa un stream anterior, puede causar un **race condition** donde ambos streams intentan modificar el mismo estado.
+Cuando se carga un chat viejo, `activeChatId` cambia y `useChat` recibe un nuevo `id`. Si hay un stream en progreso, puede causar conflicto de estado. En la práctica es difícil de triggerear.
 
 ---
 
-## Resumen de prioridad
+## Resumen
 
-| # | Problema | Severidad | ¿Corregido? |
-|---|---------|-----------|:-----------:|
-| 1 | `useTheme` incondicional en ToolRenderer | **Alta** (crash directo) | ❌ |
-| 2 | Key basada en `dark` remonta Recharts | **Alta** (freeze) | ❌ |
-| 4 | Tool parts en IndexedDB causan crash al cargar | **Alta** (crash al reabrir chat) | ❌ |
-| 6 | Race condition en `useChat` con `setMessages` | **Media** (estado corrupto) | ❌ |
-| 3 | Race condition en ActionApplier | **Media** (comportamiento errático) | ❌ |
-| 5 | normalizeMessages pierde contexto | **Baja** (IA se confunde) | ❌ |
+| # | Problema | Severidad | Estado |
+|---|---------|-----------|:------:|
+| 1 | `useTheme` crash en ToolRenderer | **Alta** | ✅ |
+| 2 | Key con `dark` remonta Recharts | **Alta** | ✅ |
+| 3 | Race condition en ActionApplier | **Media** | ✅ |
+| 4 | Tool parts en IndexedDB | **Media** | ❌ |
+| 5 | normalizeMessages pierde contexto | **Baja** | ❌ |
+| 6 | Race condition en useChat | **Baja** | ❌ |
